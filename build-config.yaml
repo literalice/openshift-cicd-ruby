@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: sample-app-pipeline
+spec:
+  strategy:
+    type: JenkinsPipeline
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        pipeline {
+          agent any
+          stages {
+            stage('Prepare Build') {
+              when {
+                expression {
+                  openshift.withCluster() {
+                    // 既にアプリケーションのビルド設定がある場合はスキップ
+                    return !openshift.selector('bc', 'sample-app').exists()
+                  }
+                }
+              }
+              steps {
+                script {
+                  openshift.withCluster() {
+                    // アプリケーションのビルド設定がある場合はスキップ
+                    openshift.newBuild('--name=sample-app', '--image-stream openshift/ruby', '--binary')
+                    def app = openshift.newApp('--name=sample-app', '--image-stream=sample-app', '--allow-missing-imagestream-tags')
+                    app.narrow('dc').expose('--port=8080')
+                    openshift.selector('svc', [app: 'sample-app']).expose()
+                  }
+                }
+              }
+            }
+          }
+        }
