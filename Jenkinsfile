@@ -24,6 +24,16 @@ pipeline {
         }
       }
     }
+    stage('Build') {
+      steps {
+        script {
+          openshift.withCluster() {
+            def appBuild = openshift.selector('bc', 'sample-app')
+            appBuild.startBuild("--from-dir=.").logs("-f")
+          }
+        }
+      }
+    }
     stage('Prepare QA') {
       when {
         expression {
