@@ -16,7 +16,7 @@ pipeline {
         script {
           openshift.withCluster() {
             // アプリケーションのビルド設定がある場合はスキップ
-            openshift.newBuild('--name=sample-app', '--image-stream openshift/ruby', '--binary')
+            openshift.newBuild('--name=sample-app', '--image-stream openshift/ruby:2.4', '--binary')
             def app = openshift.newApp('--name=sample-app', '--image-stream=sample-app', '--allow-missing-imagestream-tags')
             app.narrow('dc').expose('--port=8080')
             openshift.selector('svc', [app: 'sample-app']).expose()
